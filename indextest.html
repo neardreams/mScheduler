@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html>
+    <meta charset="UTF-8">
+    <link rel="StyleSheet" href="css/css.css" type="text/css" />
+    <link href="css/ui-lightness/jquery-ui-1.10.4.custom.css" rel="stylesheet">
+	<script type="text/javascript" src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+
+    <script src="js/jquery-1.10.2.js"></script>
+    <script src="js/jquery-ui-1.10.4.custom.js"></script>
+    <script type="text/javascript" src="https://datejs.googlecode.com/files/date.js"></script>
+
+	</head>
+    <body>
+
+        <button id="loginButton" >Google</button>
+        <input type="month" />
+        <div id="msgDiv">
+        </div>
+        <div id="loginDiv">
+        </div>
+        <div id="editTableDiv">
+        </div>
+        <div id="shiftTypeTableDiv">
+        </div>
+        <div id="showTableDiv">
+        </div>
+        <script type="text/javascript">
+
+
+        </script>
+        <script>
+        $(function(){
+
+        });
+
+            function handleClientLoad(){
+                mGapi.init();
+                mGapi.handleClientLoad();
+            };
+            //console.log(mSettings.employees[21].name);
+        </script>
+
+        <script src="https://apis.google.com/js/client.js?onload=handleClientLoad" type="text/javascript"></script>
+        <script>
+        var mSettings=(function(){
+            var year,
+                    month,
+                    employees={},
+                    shiftTypes={},
+                    monthDays,
+                    fileId;
+            var mSetDefault=function(year,month,employees,shiftTypes){
+                this.year= year || 2014;
+                this.month= month || 5;
+                this.monthDays =Date.getDaysInMonth(this.year, this.month);
+                this.employees=employees || {
+                    21:{name:'Duncan',position:'F/C',id:21,shifts:{}},
+                    20:{name:'Ginobili',position:'G',id:20,shifts:{}},
+                    33:{name:'Diaw',position:'F/C',id:33,shifts:{}},
+                    9:{name:'Parker',position:'G',id:9,shifts:{}},
+                    2:{name:'Leonard',position:'G/F',id:2,shifts:{}},
+                    4:{name:'Green',position:'G/F',id:4,shifts:{}},
+                    22:{name:'Splitter',position:'C',id:22,shifts:{}},
+                    8:{name:'Mills',position:'G',id:8,shifts:{}},
+                    0:{name:'Popovich',position:'Coach',id:0,shifts:{}}
+                };
+                this.shiftTypes = shiftTypes || {
+                    0:{name:'O',id:0,code:'Off',color:'green',limit:8},
+                    1:{name:'全',id:1,code:'All',color:'black',limit:12},
+                    2:{name:'早',id:2,code:'Early',color:'blue',limit:5},
+                    3:{name:'晚',id:3,code:'Night',color:'BlueViolet',limit:5},
+                    4:{name:'開',id:4,code:'Night',color:'Cyan',limit:5},
+                    5:{name:'關',id:5,code:'Night',color:'DeepPink',limit:5},
+                    6:{name:'開關',id:6,code:'Night',color:'Maroon',limit:5},
+                    7:{name:'全開',id:7,code:'Night',color:'PaleVioletRed',limit:5},
+                    8:{name:'全關',id:8,code:'Night',color:'SandyBrown',limit:5},
+                    9:{name:'早開',id:9,code:'Night',color:'Turquoise',limit:5},
+                    10:{name:'晚關',id:10,code:'Night',color:'YellowGreen ',limit:5}
+                };
+            };
+            return{
+                setDefault:mSetDefault,
+                employees:employees,
+                year:year,
+                month:month,
+                monthDays:monthDays,
+                shiftTypes:shiftTypes,
+                fileId:fileId
+            };
+        })();
+        var mGapi=(function(){
+            var clientId;
+            var apiKey;
+            var scopes;
+            var mGapiInit=function(){
+                clientId = '755349646213-ljhrur3eg5i2fbfg7of0h0gmcjjhpgap.apps.googleusercontent.com';
+                apiKey = 'AIzaSyBDjkHvTiln2XQ9uiMz4iHzahbxzHyUn0s';
+                scopes = ['https://www.googleapis.com/auth/plus.me','https://www.googleapis.com/auth/drive'];
+            };
+
+            var mSaveToGDrive=function(callback) {
+                //console.log(gapi.client.request);
+                /*
+                var shift ={};
+                shift['employees'] = mSettings.employees;
+                shift['shiftTypes'] = mSettings.shiftTypes;
+                shift['shifts']=mSettings.shifts;
+                const boundary = '-------314159265358979323846';
+                const delimiter = "\r\n--" + boundary + "\r\n";
+                const close_delim = "\r\n--" + boundary + "--";
+
+                var contentType = "application/json";
+                var metadata = {'mimeType': contentType};
+
+                var multipartRequestBody =
+                        delimiter +  'Content-Type: application/json\r\n\r\n' +
+                        JSON.stringify(metadata) +
+                        delimiter + 'Content-Type: ' + contentType + '\r\n' + '\r\n' +
+                        JSON.stringify(shift) +
+                        close_delim;
+
+                if (!callback) { callback = function(file) { console.log("Update Complete ",file) }; }
+                gapi.client.request({
+                    'path': '/upload/drive/v2/files/uploadType=multipart',
+                    'method': 'PUT',
+                    'params': {'uploadType': 'multipart'},
+                    'headers': {'Content-Type': 'multipart/mixed; boundary="' + boundary + '"'},
+                    'body': multipartRequestBody,
+                    callback:callback
+                });
+*/
+            };
+            // Use a button to handle authentication the first time.
+            var handleClientLoad=function() {
+                //console.log(gapi);
+                //console.log(gapi.client);
+                gapi.client.setApiKey(apiKey);
+                window.setTimeout(checkAuth,1);
+            };
+
+            function checkAuth() {
+                gapi.auth.authorize({client_id: clientId, scope: scopes, immediate: true}, handleAuthResult);
+            }
+
+
+            function handleAuthResult(authResult) {
+                var authorizeButton = document.getElementById('loginButton');
+                if (authResult && !authResult.error) {
+                    authorizeButton.style.visibility = 'hidden';
+                    makeApiCall();
+                } else {
+                    authorizeButton.style.visibility = '';
+                    authorizeButton.onclick = handleAuthClick;
+                }
+            }
+
+            function handleAuthClick(event) {
+                gapi.auth.authorize({client_id: clientId, scope: scopes, immediate: false}, handleAuthResult);
+                return false;
+            }
+
+            // Load the API and make an API call.  Display the results on the screen.
+            function makeApiCall() {
+                gapi.client.load('plus', 'v1', function() {
+                    var request = gapi.client.plus.people.get({
+                        'userId': 'me'
+                    });
+                    request.execute(function(resp) {
+                        var heading = document.createElement('h4');
+                        var image = document.createElement('img');
+                        image.src = resp.image.url;
+                        heading.appendChild(image);
+                        heading.appendChild(document.createTextNode(resp.displayName));
+
+                        document.getElementById('loginDiv').appendChild(heading);
+                    });
+                });
+                getSettingFiles();
+            }
+            var getSettingFiles = function(){
+                gapi.client.load('drive','v2',function(){
+                    var request = gapi.client.drive.files.list({
+                        'q':"title contains 'mScheduler'"
+                    });
+                    request.execute(function(resp){
+                        console.log(resp.items);
+                        if (resp.items!=null)
+                        {
+                            console.log(resp.items[0].id);
+                            mSettings.fileId=resp.items[0].id;
+                            var file=resp.items[0];
+                            if (file.downloadUrl) {
+                                var accessToken = gapi.auth.getToken().access_token;
+                                var xhr = new XMLHttpRequest();
+                                xhr.open('GET', file.downloadUrl);
+                                xhr.setRequestHeader('Authorization', 'Bearer ' + accessToken);
+                                xhr.onload = function() {
+                                    downloaded(xhr.responseText);
+                                };
+                                xhr.onerror = function() {
+                                    downloaded(null);
+                                };
+                                xhr.send();
+                            } else {
+                                downloaded(null);
+                            }
+                        }
+                        else
+                        {
+                            mSettings.setDefault();
+                            //console.log(gapi);
+                            //console.log(gapi.client);
+                            mUI.initTables();
+                            saveJson();
+                            //setInterval(updateJson,5000);
+                        }
+                    });
+                });
+            };
+            var updateJson =function(){
+                var json = JSON.stringify({
+                    employees:mSettings.employees,
+                    shiftTypes:mSettings.shiftTypes
+                });
+                const boundary = '-------314159265358979323846';
+                const delimiter = "\r\n--" + boundary + "\r\n";
+                const close_delim = "\r\n--" + boundary + "--";
+                var base64Data = btoa(unescape(encodeURIComponent(json)))
+                var contentType = "application/json; charset=UTF-8";
+                var metadata = {'title':'mScheduler.json','mimeType': contentType};
+                var multipartRequestBody =
+                        delimiter +  'Content-Type: application/json\r\n\r\n' +
+                        JSON.stringify(metadata) +
+                        delimiter + 'Content-Type: ' + contentType + '\r\n' + '\r\n' +
+                        base64Data +
+                        close_delim;
+                if (!callback) { callback = function(file) { console.log("Upload Complete ",file) }; }
+                gapi.client.request({
+                    'path': '/upload/drive/v2/files/'+ mSettings.fileId,
+                    'method': 'PUT',
+                    'params': {'uploadType': 'multipart'},
+                    'headers': {'Content-Type': 'multipart/mixed; boundary="' + boundary + '"'},
+                    'body': multipartRequestBody,
+                    callback:updated
+                });
+            };
+            var saveJson=function(){
+                var json = JSON.stringify({
+                    employees:mSettings.employees,
+                    shiftTypes:mSettings.shiftTypes
+                });
+                console.log(json);
+                const boundary = '-------314159265358979323846';
+                const delimiter = "\r\n--" + boundary + "\r\n";
+                const close_delim = "\r\n--" + boundary + "--";
+                var base64Data = btoa(unescape(encodeURIComponent(json)))
+                var contentType = "application/json; charset=UTF-8";
+                var metadata = {'title':'mScheduler.json','mimeType': contentType};
+                var multipartRequestBody =
+                        delimiter +  'Content-Type: application/json\r\n\r\n' +
+                        JSON.stringify(metadata) +
+                        delimiter + 'Content-Type: ' + contentType + '\r\n' + '\r\n' +
+                        base64Data +
+                        close_delim;
+                if (!callback) { callback = function(file) { console.log("Upload Complete ",file) }; }
+                gapi.client.request({
+                    'path': '/upload/drive/v2/files/',
+                    'method': 'POST',
+                    'params': {'uploadType': 'multipart'},
+                    'headers': {'Content-Type': 'multipart/mixed; boundary="' + boundary + '"'},
+                    'body': multipartRequestBody,
+                    callback:saved
+                });
+            };
+            var callback=function(response){
+                console.log(response);
+                getSettingFiles();
+                //console.log(decodeURIComponent(escape(atob(response))));
+            };
+            var updated=function(response){
+                console.log(response);
+            };
+            var saved=function(response){
+              console.log(response);
+            };
+            var downloaded=function(response){
+                //console.log(response);
+                var json = {};
+                json=JSON.parse(decodeURIComponent(escape(atob(response))));
+                console.log(json);
+                //console.log(json);
+                mSettings.setDefault(2014,5,json.employees,json.shiftTypes);
+                mUI.initTables();
+                setInterval(updateJson,5000);
+            };
+            return{
+                saveToGDrive:mSaveToGDrive,
+                handleClientLoad:handleClientLoad,
+                init:mGapiInit
+            }
+        })(gapi || window.gapi);
+        var mUI = (function(){
+            var editTable,
+                    showTable,
+                    shiftTypeTable,
+                    showTableDiv =$('#showTableDiv'),
+                    editTableDiv= $('#editTableDiv'),
+                    shiftTypeTableDiv=$('#shiftTypeTableDiv');
+            var mInitTables=function(){
+                mDrawAll();
+            };
+            var mDrawShowTable=function(){
+                showTableDiv.empty();
+                mInitShowTable();
+                mInitShowTableThead();
+                mInitShowTableTbody();
+                mInitShowTableTfoot();
+                showTableDiv.append(showTable);
+            };
+            var mDrawEditTable=function(){
+                editTableDiv.empty();
+                //mInitEditTable();
+                mInitEditTable();
+                mInitEditTableThead();
+                //mInitEditTableTbody();
+                mInitEditTableTbody();
+                mInitEditTableTfoot();
+                editTableDiv.append(editTable);
+            };
+            var mDrawShiftTypeTable=function(){
+                shiftTypeTableDiv.empty();
+                mInitShiftTypeTable();
+                mInitShiftTypeTableThead();
+                mInitShiftTypeTableTbody();
+                mInitShiftTypeTableTfoot();
+                shiftTypeTableDiv.append(shiftTypeTable);
+            };
+            var mDrawAll=function(){
+                mDrawEditTable();
+                mDrawShiftTypeTable();
+                mDrawShowTable();
+                mTriggerInputChangeAll();
+            };
+            var mTriggerInputChangeAll =function(){
+                editTable.find('tbody').trigger('shiftChangeAll');
+                shiftTypeTable.find('tbody tr td').trigger('shiftChange');//mInitShiftTypeTableTbody();
+                showTable.find('tbody tr td').trigger('shiftChange');
+            };
+            var mInitEditTable=function(){
+                editTable = $('<table/>').append($('<thead/>')).append($('<tbody/>')).append('<tfoot/>').attr("id","editTable");
+                editTable.on('shiftChangeAll','tbody',function(event){
+                        $.each(mSettings.employees,function(employeeKey){
+                            var employee = mSettings.employees[employeeKey];
+                            $.each(employee.shifts,function(shiftKey){
+                                var shift = employee.shifts[shiftKey];
+                                    //console.log(editTable.find('tbody tr td[data-date=' + i + '][data-employee=' + employee.id + '] input'));
+                                editTable.find('tbody tr td[data-date=' + shiftKey + '][data-employee=' + employee.id + '] input').first().val(shift.shiftType);
+                            });
+                        });
+                    $.each(editTable.find('tbody tr td'),function(tdKey) {
+                        var td = editTable.find('tbody tr td').eq(tdKey);
+                        if (td.index()>0)
+                        {
+                            var date = td.attr('data-date');
+                            var employee = mSettings.employees[td.attr('data-employee')];
+                            var shifth3 = td.find('h3');
+                            if (employee.shifts){
+                                if ($.inArray(date.toString(),Object.keys(employee.shifts))>-1){
+                                    var text = employee.shifts[date].shiftType;
+                                }
+                                if ($.inArray(text,Object.keys(mSettings.shiftTypes))>-1){
+                                    shifth3.text(mSettings.shiftTypes[text].name);
+                                }
+                                if (td.index() > 0) {
+                                    var date = td.attr('data-date');
+                                    var inp = td.find('input').first();
+                                    var shiftType=mSettings.shiftTypes[inp.val()];
+                                    if (shiftType){
+                                        td.find('h3').css('color',shiftType.color);
+                                    }
+                                    var employee = mSettings.employees[td.attr('data-employee')];
+                                    //employee.shifts[date] = {shiftType:inp.val()};
+                                }
+                            }
+                        }
+                    });
+                    mGapi.saveToGDrive();
+                    console.log('mInitEditTable');
+                });
+                editTable.children('tbody').on('focus','input',function(e){
+                    $(this).select();
+                    event.preventDefault();
+                });
+                editTable.children('tbody').on('shiftDelete','td',function(e){
+                   var td=$(this);
+                   var h3 = $(this).children('h3').first();
+                   var inp = $(this).children('input').first();
+                   var employee = mSettings.employees[$(this).attr('data-employee')];
+                   var date =$(this).attr('data-date');
+                   h3.text('');
+                   h3.css('color','');
+                   inp.val('');
+                   delete employee.shifts[date];
+                });
+
+                editTable.children('tbody').on('click','td',function(e) {
+                    var inp = $(this).find('input').first();
+                    var h3 = $(this).find('h3').first();
+                    if ($(this).index()>0) {
+                        h3.hide();
+                        inp.show().focus();
+                    }
+                    event.preventDefault();
+                });
+                editTable.children('tbody').on('change','input',function(){
+                    var h3 = $(this).prev().css('background-color','');;
+                    var date = $(this).parent().attr('data-date');
+                    var employeeId = $(this).parent().attr('data-employee');
+                    if ($(this).val().indexOf('!')>-1){
+                        h3.css('background-color','lightgray');
+                    }
+                    var shiftTypeId =$(this).val().replace("!","");
+                    var shiftType=mSettings.shiftTypes[shiftTypeId];
+                    var td= $(this).parent();
+                    var employee = mSettings.employees[td.attr('data-employee')];
+                    if (shiftType){
+                        h3.text(shiftType.name);
+                        h3.css('color',shiftType.color);
+                        var date=td.attr('data-date');
+                        var shiftTypeId = $(this).val().replace('!','');
+                        employee.shifts[date] = {shiftType:shiftTypeId};
+                        mGapi.saveToGDrive();
+                     }
+                    else{
+                        td.trigger('shiftDelete');
+                    }
+                    shiftTypeTable.find('tbody tr td[data-date=' + date +']').trigger('shiftChange');
+                    showTable.find('tbody tr td[data-employee='+ employee.id +']').trigger('shiftChange');
+                    $(this).hide();
+                    //mInitShiftTypeTableTbody();
+                    event.preventDefault();
+                });
+                editTable.children('tbody').on('focusout','input',function(){
+                    var h3 =$(this).prev();
+                    $(this).hide();
+                    h3.show();
+                    event.preventDefault();
+                });
+                editTable.children('tbody').on('keydown','input',function (e) {
+                    var td_index =$(this).parent().index();
+                    var tr_index =$(this).parent().parent().index();
+                    var keyCode = e.keyCode || e.which,
+                            key = {left: 37, up: 38, right: 39, down: 40 ,enter:13 };
+                    switch (keyCode) {
+                        case key.enter:
+                        case key.down:
+                            if ($(this).parent().parent().next().length<=0)
+                                editTable.children('tbody').children().first().children().eq(td_index+1).click();
+                            else
+                                $(this).parent().parent().next().children().eq(td_index).click();
+                            event.preventDefault();
+                            break;
+                        case key.left:
+                            if ($(this).parent().index()==1)
+                                $(this).parent().parent().prev().children().last().click();
+                            else
+                                $(this).parent().prev().click();
+                            event.preventDefault();
+                            break;
+                        case key.up:
+                            if ($(this).parent().parent().index()!=0)
+                                $(this).parent().parent().prev().children().eq(td_index).click();
+                            else
+                                editTable.children('tbody').children().last().children().eq(td_index-1).click();
+                            event.preventDefault();
+                            break;
+                        case key.right:
+                            if ($(this).parent().next().length<=0)
+                                $(this).parent().parent().next().children().eq(1).click();
+                            else
+                                $(this).parent().next().click();
+                            event.preventDefault();
+                            break;
+                    }
+                });
+            };
+            var mInitEditTableTbody=function(){
+                editTable.children('tbody').empty();
+                var trs=[];
+                $.each (mSettings.employees,function(employeeKey){
+                    var editTableTr=$('<tr/>');
+                    editTableTr.attr('data-employee',mSettings.employees[employeeKey].id);
+                    var employee =mSettings.employees[employeeKey];
+                    var nameh3 = $('<h3/>').text(employee.name).click(function(){
+                        mDrawEditTableTfootAsEdit(employee);
+                    });
+                    var employeeTd = $('<td/>');
+                    employeeTd.append(nameh3);
+                    editTableTr.append(employeeTd);
+                    for (var i =1;i<=mSettings.monthDays;i++){
+                        var td=$('<td/>').attr('data-date',i).attr('data-employee',employee.id);
+                        var shifth3 =$('<h3/>');
+                        var inp=$('<input/>').attr('size',2).hide();
+                        td.append(shifth3).append(inp);
+                        editTableTr.append(td);
+                    };
+                    trs.push(editTableTr);
+                });
+                editTable.children('tbody').append(trs);
+                console.log("mInitEditTableTbody");
+            };
+            var mInitShiftTypeTable=function(){
+                shiftTypeTable= $('<table/>').append($('<thead/>')).append($('<tbody/>')).append('<tfoot/>').attr("id","shiftTypeTable");
+                shiftTypeTable.children('tbody').on('shiftChange','td',function(event){
+                    var td = $(this);
+                    if (td.index()>0){
+                        var date = td.attr('data-date');
+                        var shiftTypeId = td.attr('data-shiftType');
+                        var count = 0;
+                        $.each(mSettings.employees, function (employeeKey) {
+                            var employee = mSettings.employees[employeeKey];
+                            if ($.inArray(date.toString(), Object.keys(employee.shifts)) > -1) {
+                                var employeeShiftType = employee.shifts[date].shiftType;
+                                if (employeeShiftType === shiftTypeId.toString()) {
+                                    count++;
+                                }
+                            }
+                            td.text(count);
+                        });
+                    }
+                    //console.log('shiftType td shiftChange triggered');
+                });
+            };
+            var mInitShiftTypeTableThead=function(){
+                shiftTypeTable.children('thead').empty();
+                var shiftTypeTableName="Shift Types";
+                var shiftTr = $('<tr/>').append($('<th/>').text(shiftTypeTableName));
+                $.each(mSettings.shiftTypes,function(shiftTypeKey){
+
+                });
+                for (var i=1;i<=mSettings.monthDays;i++){
+                    shiftTr.append($('<th/>').text(i).attr('data-date',i));
+                }
+                shiftTypeTable.children('thead').append(shiftTr);
+            };
+            var mInitShiftTypeTableTbody=function(){
+                shiftTypeTable.children('tbody').empty();
+                $.each (mSettings.shiftTypes,function(shiftTypeKey){
+                    var shiftTypeTableTr=$('<tr/>');
+                    var shiftType = mSettings.shiftTypes[shiftTypeKey];
+                    var shiftTypeTd = $('<td/>');
+                    var shiftTypeh3 = $('<h3/>').text(shiftType.name).click(function(){
+                        mDrawShiftTypeTableTfootAsEdit(shiftType);
+                    });
+                    shiftTypeTableTr.attr('data-shiftType',shiftType.id);
+                    shiftTypeTd.append(shiftTypeh3);
+                    shiftTypeTableTr.append(shiftTypeTd);
+                    for (var i =1;i<=mSettings.monthDays;i++){
+                        var td=$('<td/>');
+                        td.attr('data-shiftType',shiftType.id);
+                        td.attr('data-date',i);
+                        //console.log("in shifts? " + ($.inArray(i.toString(),Object.keys(mSettings.shifts))>-1).toString());
+                        shiftTypeTableTr.append(td);
+                    }
+                    shiftTypeTable.children('tbody').append(shiftTypeTableTr);
+                });
+                //shiftTypeTable.find('tbody tr td').trigger('shiftChange');
+            };
+            var mDrawShiftTypeTableTfootAsEdit= function(shiftType){
+                shiftTypeTable.children('tfoot').empty();
+                var shiftTypeTableTfootTr =$('<tr/>');
+                var td = $('<td/>');
+                var nameInput = $('<input/>');
+                var saveShiftTypeButton = $('<button/>');
+                var cancelButton =$('<button/>');
+                cancelButton.text('Cancel');
+                cancelButton.click(function(){
+                    mInitShiftTypeTableTfoot();
+                });
+
+                var deleteButton =$('<button/>');
+                deleteButton.text('Delete');
+                deleteButton.click(function(){
+                    if (confirm("Are you sure?")){
+                        delete mSettings.shiftTypes[shiftType.id];
+                        mDrawAll();
+                        mGapi.saveToGDrive();
+                    }
+                    else{
+                        return false;
+                    }
+                });
+                nameInput.attr('size',20);
+                nameInput.attr('placeholder','請輸入名稱');
+                saveShiftTypeButton.text('Save');
+                td.attr('colspan','99');
+                nameInput.val(shiftType.name);
+                //idInput.val(Object.key(employee));
+                td.append(nameInput).append(saveShiftTypeButton).append(deleteButton).append(cancelButton);
+                shiftTypeTableTfootTr.append(td);
+                saveShiftTypeButton.click(function(){
+                    if (nameInput.val().length<=0) {
+                        alert("Name column must be filled");
+                        nameInput.focus();
+                    }
+                    else{
+                        shiftType.name=nameInput.val();
+                        mDrawAll();
+                        mGapi.saveToGDrive();
+                    }
+                });
+                shiftTypeTable.children('tfoot').append(shiftTypeTableTfootTr);
+            };
+            var mInitShiftTypeTableTfoot=function(){
+                shiftTypeTable.children('tfoot').empty();
+                var shiftTypeTableTfootTr =$('<tr/>');
+                var td = $('<td/>').attr('colspan','99');;
+                var nameInput = $('<input/>').attr('size',20).attr('placeholder','請輸入名稱');;
+                var idInput =$('<input/>').attr('size',10).attr('placeholder','請輸入ID');
+                var colorDatalist =$('<datalist/>').attr('id','colorDatalist');
+                colorDatalist.append($('<option/>').val('Black'));
+                colorDatalist.append($('<option/>').val('Navy'));
+                colorDatalist.append($('<option/>').val('Green'));
+                colorDatalist.append($('<option/>').val('DarkSlateBlue'));
+                var colorInput = $('<input/>').attr('list','colorDatalist');
+
+                var createShiftTypeButton = $('<button/>').text('Create');
+                var cancelButton =$('<button/>').text('Cancel').click(function(){
+                    mInitShiftTypeTableTfoot();
+                });
+                td.append(colorDatalist).append(nameInput).append(idInput).append(colorInput).append(createShiftTypeButton).append(cancelButton);
+                shiftTypeTableTfootTr.append(td);
+                createShiftTypeButton.click(function(){
+                    if (idInput.val() in mSettings.shiftTypes){
+                        alert(idInput.val() + " Existed, please change it.");
+                        idInput.focus().select();
+                    }
+                    else if (nameInput.val().length<=0) {
+                        alert("Name column must be filled");
+                        nameInput.focus();
+                    }
+                    else if (idInput.val().length<=0) {
+                        alert("ID column must be filled");
+                        idInput.focus();
+                    }
+                    else if (colorInput.val().length<=0){
+                        alert("Color column must be filled");
+                        colorInput.focus();
+                    }
+                    else{
+                        mSettings.shiftTypes[idInput.val()] = {
+                            name:nameInput.val(),
+                            id:idInput.val(),
+                            color:colorInput.val()
+                        };
+                        mDrawAll();
+                        mGapi.saveToGDrive();
+                    }
+                });
+                shiftTypeTable.children('tfoot').append(shiftTypeTableTfootTr);
+            };
+
+            var mInitEditTableThead=function(){
+                editTable.children('thead').empty();
+                var editTableName="Edit";
+                var editTr = $('<tr/>');
+                editTr.append($('<th/>').text(editTableName));
+                for (var i=1;i<=mSettings.monthDays;i++){
+                    editTr.append($('<th/>').text(i));
+                }
+                editTable.children('thead').append(editTr);
+            };
+            var mDrawEditTableTfootAsEdit=function(employee){
+                editTable.children('tfoot').empty();
+                var editTableTfootTr =$('<tr/>');
+                var td = $('<td/>').attr('colspan','99');
+                var nameInput = $('<input/>');
+                var positionInput =$('<input/>');
+                var saveEmployeeButton = $('<button/>');
+                var cancelButton =$('<button/>');
+                cancelButton.text('Cancel');
+                cancelButton.click(function(){
+                    mInitEditTableTfoot();
+                });
+
+                var deleteButton =$('<button/>');
+                deleteButton.text('Delete');
+                deleteButton.click(function(){
+                    if (confirm("Are you sure?")){
+                        delete mSettings.employees[employee.id];
+                        mDrawAll();
+                        mGapi.saveToGDrive();
+                    }
+                    else{
+                        return false;
+                    }
+                });
+                nameInput.attr('size',20).attr('placeholder','請輸入姓名').val(employee.name);
+                positionInput.attr('size',10).attr('placeholder','請輸入POS');
+                saveEmployeeButton.text('Save');
+                //idInput.val(Object.key(employee));
+                positionInput.val(employee.position);
+                td.append(nameInput).append(positionInput).append(saveEmployeeButton).append(deleteButton).append(cancelButton);
+                editTableTfootTr.append(td);
+                saveEmployeeButton.click(function(){
+                    if (nameInput.val().length<=0) {
+                        alert("Name column must be filled");
+                        nameInput.focus();
+                    }
+                    else if (positionInput.val().length<=0) {
+                        alert("Position column must be filled");
+                        positionInput.focus();
+                    }
+                    else{
+                        employee.name=nameInput.val();
+                        employee.position=positionInput.val();
+                        mDrawAll();
+                        mGapi.saveToGDrive();
+                    }
+                });
+                editTable.children('tfoot').append(editTableTfootTr);
+            };
+            var mInitEditTableTfoot=function(){
+                editTable.children('tfoot').empty();
+                var editTableTfootTr =$('<tr/>');
+                var td = $('<td/>').attr('colspan','99');;
+                var nameInput = $('<input/>').attr('size',20).attr('placeholder','請輸入姓名');;
+                var idInput =$('<input/>').attr('size',10).attr('placeholder','請輸入ID');;
+                var positionInput =$('<input/>').attr('size',10).attr('placeholder','請輸入POS');;
+                var createEmpolyeeButton = $('<button/>').text('Create');;
+                var cancelButton =$('<button/>').text('Cancel').click(function(){
+                    mInitEditTableTfoot();
+                });
+                td.append(nameInput).append(idInput).append(positionInput).append(createEmpolyeeButton).append(cancelButton);
+                editTableTfootTr.append(td);
+                createEmpolyeeButton.click(function(){
+                    if (idInput.val() in mSettings.employees){
+                        alert([idInput.val()] + " Existed, please change it.");
+                        idInput.focus();
+                        idInput.select();
+                    }
+                    else if (nameInput.val().length<=0) {
+                        alert("Name column must be filled");
+                        nameInput.focus();
+                    }
+                    else if (idInput.val().length<=0) {
+                        alert("ID column must be filled");
+                        idInput.focus();
+                    }
+                    else if (positionInput.val().length<=0) {
+                        alert("Position column must be filled");
+                        positionInput.focus();
+                    }
+                    else{
+                        mSettings.employees[idInput.val()] = {
+                            name:nameInput.val(),
+                            position:positionInput.val(),
+                            id:idInput.val(),
+                            shifts:{}
+                        };
+                        mDrawAll();
+                        mGapi.saveToGDrive();
+                    }
+                });
+                editTable.children('tfoot').append(editTableTfootTr);
+            };
+
+            var mInitShowTable=function(){
+                showTable = $('<table/>').append($('<thead/>')).append($('<tbody/>')).append('<tfoot/>').attr("id","showTable");
+                showTable.children('tbody').on('shiftChange','td',function(event){
+                    var td =$(this);
+                    if (td.index()>0){
+                        var shiftTypeId =td.attr('data-shifttype');
+                        var employee =mSettings.employees[td.attr('data-employee')];
+                        var count=0;
+                        for (var i=1;i<=mSettings.monthDays;i++){
+                            if ($.inArray(i.toString(),Object.keys(employee.shifts))>-1){
+                                if (employee.shifts[i].shiftType===shiftTypeId){
+                                    count++;
+                                }
+                            }
+                        }
+                        td.text(count);
+                    }
+                });
+            };
+            var mInitShowTableThead=function(){
+                showTable.children('thead').empty();
+                var showTableName="Show";
+                var showTr = $('<tr/>').append($('<th/>').text(showTableName));
+                $.each(mSettings.shiftTypes,function(shiftTypeKey){
+                    var shiftType =mSettings.shiftTypes[shiftTypeKey];
+                    showTr.append($('<th/>').text(shiftType.name));
+                });
+                showTable.children('thead').append(showTr);
+                //console.log(editTable);
+            };
+            var mInitShowTableTbody=function(){
+                showTable.children('tbody').empty();
+                $.each (mSettings.employees,function(employeeKey){
+                    var showTableTr=$('<tr/>');
+                    var employee =mSettings.employees[employeeKey];
+                    var employeeTd =$('<td/>');
+                    employeeTd.append($('<h3/>').text(employee.name));
+                    showTableTr.append(employeeTd);
+                    $.each(mSettings.shiftTypes,function(shiftTypeKey){
+                        var shiftType = mSettings.shiftTypes[shiftTypeKey];
+                        var td =$('<td/>');
+                        td.attr('data-employee',employee.id);
+                        td.attr('data-shiftType',shiftType.id);
+                        showTableTr.append(td);
+                    }) ;
+                    showTable.children('tbody').append(showTableTr);
+                });
+                //showTable.find('tbody tr td').trigger('shiftChange');
+            };
+            var mInitShowTableTfoot=function(){
+                showTable.children('tfoot').empty();
+                var tr = $('<tr/>');
+                var totalTd =$('<td/>').text('Total:');
+                tr.append(totalTd);
+                //showTable.children('tfoot').append(tr);
+            };
+            return{
+                initTables:mInitTables,
+                drawShowTable:mDrawShowTable,
+                drawEditTable:mDrawEditTable,
+                drawAll:mDrawAll,
+                changeAll:mTriggerInputChangeAll
+            };
+        })();
+
+        $(function(){
+
+        });
+        </script>
+    </body>
+
+</html>
